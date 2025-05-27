@@ -50,10 +50,11 @@ Explore the sidebar to get started 👉
 For installation instructions, pretrained models, or benchmarking datasets, refer to the corresponding sections.
 
 
-
-
-
-
+<p align="center">
+  <a href="https://mapmyvisitors.com/web/1bybt" title="Visit tracker">
+    <img src="https://mapmyvisitors.com/map.png?d=Yyk7gzaOQndqLUKtJ_tf-WiyCHTadg_nHYdA0CSOFtI&cl=ffffff" />
+  </a>
+</p>
 
 
 
