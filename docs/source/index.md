@@ -21,19 +21,6 @@
 ## 🔧 Components
 
 - `themap.model.HLA_vae` — Variational Autoencoder for HLA sequences  
-```python
-"""
-    Variational Autoencoder (VAE) model for HLA sequences.
-
-    This model learns a latent representation of HLA amino acid sequences
-    and reconstructs the original sequence through a decoder. It is trained
-    to minimize reconstruction loss and KL divergence.
-
-    Args:
-        input_size (list[int]): Shape of input tensor (typically [channels, length]).
-        latent_size (int): Dimension of latent representation.
-    """
-```
 - `themap.model.PEP_vae` — Variational Autoencoder for peptide sequences  
 - `themap.model.THE` — Main prediction module integrating TCRs with peptide or HLA targets
 
