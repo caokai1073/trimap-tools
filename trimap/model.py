@@ -6,8 +6,8 @@ from tqdm import tqdm
 from collections import defaultdict
 from torch.nn.utils.parametrizations import weight_norm
 from tqdm import tqdm
-from themap import net
-from themap import utils
+from trimap import net
+from trimap import utils
 import pandas as pd
 import logging
 import os
@@ -234,8 +234,8 @@ class PEP_vae(nn.Module):
                 conv_embed.append(z_conv.detach().cpu().numpy())
 
         return np.concatenate(pep_embed, axis=0), np.concatenate(conv_embed, axis=0)
-    
-class THE(nn.Module):
+
+class TCR_model(nn.Module):
     """
     THE (TCR-HLA-Epitope) model for predicting T-cell epitope binding.
 
@@ -259,12 +259,17 @@ class THE(nn.Module):
     def print_logo(self):
         """Print ASCII logo banner to console."""
         logo = r"""
-████████╗██╗░░██╗███████╗███╗░░░███╗░█████╗░██████╗░
-╚══██╔══╝██║░░██║██╔════╝████╗░████║██╔══██╗██╔══██╗
-░░░██║░░░███████║█████╗░░██╔████╔██║███████║██████╔╝
-░░░██║░░░██╔══██║██╔══╝░░██║╚██╔╝██║██╔══██║██╔═══╝░
-░░░██║░░░██║░░██║███████╗██║░╚═╝░██║██║░░██║██║░░░░░
-░░░╚═╝░░░╚═╝░░╚═╝╚══════╝╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═╝░░░░░
+ ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
+ ▀▀▀▀█░█▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
+     ▐░▌     ▐░▌       ▐░▌     ▐░▌     ▐░▌▐░▌ ▐░▌▐░▌▐░▌       ▐░▌▐░▌       ▐░▌
+     ▐░▌     ▐░█▄▄▄▄▄▄▄█░▌     ▐░▌     ▐░▌ ▐░▐░▌ ▐░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌
+     ▐░▌     ▐░░░░░░░░░░░▌     ▐░▌     ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
+     ▐░▌     ▐░█▀▀▀▀█░█▀▀      ▐░▌     ▐░▌   ▀   ▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
+     ▐░▌     ▐░▌     ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
+     ▐░▌     ▐░▌      ▐░▌  ▄▄▄▄█░█▄▄▄▄ ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
+     ▐░▌     ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
+      ▀       ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀         ▀  ▀           
         """
         print(logo)
 
@@ -279,7 +284,7 @@ class THE(nn.Module):
             max_beta (int): Maximum beta sequence length.
             re_embed (bool): If True, force re-embedding even if cache exists.
         """
-        from themap.BERT import ProtBERT_embed as PB
+        from trimap.BERT import ProtBERT_embed as PB
         prot_bert = PB(device)
 
         # Generalized loader/creator for a chain ('alpha' or 'beta')
