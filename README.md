@@ -44,4 +44,4 @@ For step-by-step guides on how to use **trimap-tools**, including training HLA/p
   Identifies novel peptides potentially involved in disease by integrating small-scale disease-specific data with large-scale public datasets.
 
 ## Citation
-If you use **trimap-tools** in your research, please cite the following paper:
+If you use **trimap-tools** in your research, please cite the following paper
