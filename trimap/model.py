@@ -235,7 +235,7 @@ class PEP_vae(nn.Module):
 
         return np.concatenate(pep_embed, axis=0), np.concatenate(conv_embed, axis=0)
 
-class TCR_model(nn.Module):
+class TCRbind(nn.Module):
     """
     THE (TCR-HLA-Epitope) model for predicting T-cell epitope binding.
 
@@ -249,29 +249,12 @@ class TCR_model(nn.Module):
         q_dim (int): Feature dimension of TCR chains.
     """
     def __init__(self, ban_heads=8, mlp=[512, 128, 32], v_dim=256, q_dim=1024):
-        super(THE, self).__init__()
+        super(TCRbind, self).__init__()
         self.bcn_alpha = weight_norm(net.BANLayer(v_dim=v_dim, q_dim=q_dim, h_dim=mlp[0], h_out=ban_heads), name='h_mat', dim=None)
         self.bcn_beta = weight_norm(net.BANLayer(v_dim=v_dim, q_dim=q_dim, h_dim=mlp[0], h_out=ban_heads), name='h_mat', dim=None)
         self.classifier = net.MLPDecoder(in_dim=mlp[0]*2, hidden_dim=mlp[1], out_dim=mlp[2], binary=1)
         self.alpha_dict = None
         self.beta_dict = None
-
-    def print_logo(self):
-        """Print ASCII logo banner to console."""
-        logo = r"""
- ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄       ▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌     ▐░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
- ▀▀▀▀█░█▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌   ▐░▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
-     ▐░▌     ▐░▌       ▐░▌     ▐░▌     ▐░▌▐░▌ ▐░▌▐░▌▐░▌       ▐░▌▐░▌       ▐░▌
-     ▐░▌     ▐░█▄▄▄▄▄▄▄█░▌     ▐░▌     ▐░▌ ▐░▐░▌ ▐░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌
-     ▐░▌     ▐░░░░░░░░░░░▌     ▐░▌     ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-     ▐░▌     ▐░█▀▀▀▀█░█▀▀      ▐░▌     ▐░▌   ▀   ▐░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
-     ▐░▌     ▐░▌     ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
-     ▐░▌     ▐░▌      ▐░▌  ▄▄▄▄█░█▄▄▄▄ ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
-     ▐░▌     ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          
-      ▀       ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀  ▀         ▀  ▀           
-        """
-        print(logo)
 
     def load_dict(self, device, df_data, max_alpha, max_beta, re_embed):
         """
@@ -332,8 +315,8 @@ class TCR_model(nn.Module):
         max_alpha,
         max_beta,
         max_pep,
-        pep_model_dir='pep_model.pt',
-        hla_model_dir='hla_model.pt',
+        phla_model_dir,
+        hla_model_dir,
         hla_dict=None,
         load_dict=True,
         re_embed=False
@@ -353,7 +336,7 @@ class TCR_model(nn.Module):
             max_alpha (int): Maximum length for alpha CDR3 sequences.
             max_beta (int): Maximum length for beta CDR3 sequences.
             max_pep (int): Maximum length for peptide sequences (if target is peptide).
-            pep_model_dir (str): Path to pre-trained peptide VAE model.
+            phla_model_dir (str): Path to pre-trained peptide-HLA VAE model.
             hla_model_dir (str): Path to pre-trained HLA VAE model.
             hla_dict (dict, optional): Dictionary mapping HLA names to amino acid sequences.
             load_dict (bool): If True, load/create TCR α/β embedding dictionaries.
@@ -382,7 +365,7 @@ class TCR_model(nn.Module):
             epi_train = torch.from_numpy(epi_train).transpose(1,2).float()
             
             pep_model = PEP_vae(input_size=[21, max_pep],latent_size=256).to(device)
-            pep_model.load_state_dict(torch.load(pep_model_dir))
+            pep_model.load_state_dict(torch.load(phla_model_dir))
             
             dataset = torch.utils.data.TensorDataset(epi_train)
             dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -448,7 +431,10 @@ class TCR_model(nn.Module):
         neg_resample=True,
         max_alpha=125,
         max_beta=127, 
-        max_pep=14
+        max_pep=14,
+        phla_model_dir='phla_model.pt',
+        hla_model_dir='hla_model.pt',
+        re_embed=False
     ):
         """
         Train the THE model to predict TCR-target binding.
@@ -486,7 +472,7 @@ class TCR_model(nn.Module):
         Returns:
             None. (Trained weights are updated in-place.)
         """
-        self.print_logo()
+
         self.train()
 
         optimizer = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=1e-4)
@@ -501,6 +487,7 @@ class TCR_model(nn.Module):
             train_loader = self.create_dataloader(
                 df_data, batch_size, device, targets, 'train',
                 max_alpha=max_alpha, max_beta=max_beta, max_pep=max_pep, hla_dict=hla_dict,
+                phla_model_dir=phla_model_dir, hla_model_dir=hla_model_dir, re_embed=re_embed
             )
 
         logger.info('Training...')
@@ -514,6 +501,7 @@ class TCR_model(nn.Module):
                 train_loader = self.create_dataloader(
                     df_data, batch_size, device, targets, 'train',
                     max_alpha=max_alpha, max_beta=max_beta, max_pep=max_pep, hla_dict=hla_dict,
+                    phla_model_dir=phla_model_dir, hla_model_dir=hla_model_dir, re_embed=re_embed,
                     load_dict=(epoch == 0)
                 )
 
